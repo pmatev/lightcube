@@ -2,6 +2,13 @@ import * as THREE from 'three';
 
 /**
  * @author arodic / https://github.com/arodic
+ *
+ * example:
+ * transformControl = new TransformControls(camera, this.root);
+ * this.transformControl.addEventListener('change', this.animate);
+ * this.transformControl.attach(object);
+ * scene.add(this.transformControl);
+ *
  */
 
 function GizmoMaterial(parameters) {

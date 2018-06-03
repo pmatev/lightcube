@@ -47,12 +47,6 @@ class App extends Component {
     this.object = object;
 
     this.orbitControl = new OrbitControls(camera);
-    // this.transformControl = new TransformControls(camera, this.root);
-    // this.transformControl.addEventListener('change', this.animate);
-
-    // this.transformControl.attach(object);
-
-    // scene.add(this.transformControl);
 
     document.addEventListener('mousemove', this.onMouseMove, false);
     this.registerKeyboardEvents();
