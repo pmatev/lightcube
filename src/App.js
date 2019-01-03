@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import * as THREE from 'three';
+import { OrbitControls, OBJLoader } from 'three-full';
 
-import OrbitControls from './lib/OrbitControls';
-import TransformControls from './lib/TransformControls';
 import { AXES, BUTTONS } from './lib/ps4';
 
 const defaultMaterial = new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff });
@@ -42,14 +41,28 @@ class App extends Component {
     scene.add(gridHelper);
 
     const geometry = new THREE.BoxBufferGeometry(20, 20, 20);
-    const object = new THREE.Mesh(geometry, defaultMaterial);
-    scene.add(object);
-    this.object = object;
+    // const object = new THREE.Mesh(geometry, defaultMaterial);
+    // scene.add(object);
+    // this.object = object;
 
     this.orbitControl = new OrbitControls(camera);
 
     document.addEventListener('mousemove', this.onMouseMove, false);
-    this.registerKeyboardEvents();
+
+    const loader = new OBJLoader();
+
+    // load a resource
+    loader.load(`${process.env.PUBLIC_URL}/models/boxcar.obj`,
+      obj => {
+        scene.add(obj);
+      },
+      xhr => {
+        console.log(`${xhr.loaded / xhr.total * 100}% loaded`);
+      },
+      error => {
+        console.log('An error happened', error);
+      },
+    );
 
     this.registerGamepad();
     this.animate();
@@ -61,49 +74,6 @@ class App extends Component {
     });
   }
 
-  registerKeyboardEvents = () => {
-    window.addEventListener('keydown', (event) => {
-      switch (event.keyCode) {
-        case 81: // Q
-          this.transformControl.setSpace(this.transformControl.space === 'local' ? 'world' : 'local');
-          break;
-        case 17: // Ctrl
-          this.transformControl.setTranslationSnap(100);
-          this.transformControl.setRotationSnap(THREE.Math.degToRad(15));
-          break;
-        case 87: // W
-          this.transformControl.setMode('translate');
-          break;
-        case 69: // E
-          this.transformControl.setMode('rotate');
-          break;
-        case 82: // R
-          this.transformControl.setMode('scale');
-          break;
-        case 187:
-        case 107: // +, =, num+
-          this.transformControl.setSize(this.transformControl.size + 0.1);
-          break;
-        case 189:
-        case 109: // -, _, num-
-          this.transformControl.setSize(Math.max(this.transformControl.size - 0.1, 0.1));
-          break;
-        default:
-          break;
-      }
-    });
-    window.addEventListener('keyup', (event) => {
-      switch (event.keyCode) {
-        case 17: // Ctrl
-          this.transformControl.setTranslationSnap(null);
-          this.transformControl.setRotationSnap(null);
-          break;
-        default:
-          break;
-      }
-    });
-  }
-
   onMouseMove = (event) => {
     event.preventDefault();
     this.mouse = this.mouse || new THREE.Vector2();
@@ -112,13 +82,13 @@ class App extends Component {
 
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(this.mouse, this.camera);
-    [this.intersects] = raycaster.intersectObjects([this.object]);
+    // [this.intersects] = raycaster.intersectObjects([this.object]);
   }
 
   animate = () => {
     this.update();
     this.orbitControl.update();
-    // this.transformControl.update();
+
     this.renderScene();
 
     requestAnimationFrame(this.animate);
@@ -130,15 +100,15 @@ class App extends Component {
     const gamepad = navigator.getGamepads()[0];
     const translateX = gamepad.axes[AXES.LEFT.X];
     const translateY = -1 * gamepad.axes[AXES.LEFT.Y];
-    this.object.position.add(new THREE.Vector3(translateX, translateY, 0));
+    // this.object.position.add(new THREE.Vector3(translateX, translateY, 0));
   }
 
   renderScene = () => {
-    if (this.intersects && this.intersects.object === this.object) {
-      this.object.material = defaultMaterial;
-    } else if (this.object) {
-      this.object.material = outlineMaterial;
-    }
+    // if (this.intersects && this.intersects.object === this.object) {
+    //   this.object.material = defaultMaterial;
+    // } else if (this.object) {
+    //   this.object.material = outlineMaterial;
+    // }
 
     this.renderer.render(this.scene, this.camera);
   }
