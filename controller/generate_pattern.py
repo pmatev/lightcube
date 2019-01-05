@@ -1,3 +1,4 @@
+import os
 import sys
 from argparse import ArgumentParser
 from importlib import import_module
@@ -27,6 +28,9 @@ data = module.generate(
     z=args.dimensions[2],
     time_steps=args.time_steps
 )
+
+if not os.path.exists('./patterns/outputs'):
+    os.mkdir('./patterns/outputs')
 
 filename = f'./patterns/outputs/{args.pattern}.{args.format}'
 data.save(filename, format=args.format)

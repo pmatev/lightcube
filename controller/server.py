@@ -1,6 +1,7 @@
 from sanic import Sanic
 from sanic.websocket import WebSocketProtocol
 import json
+from argparse import ArgumentParser
 
 app = Sanic()
 
@@ -22,4 +23,9 @@ async def feed(request, ws):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, protocol=WebSocketProtocol)
+    parser = ArgumentParser()
+    parser.add_argument('--port', type=int, default=8000)
+    parser.add_argument('--host', type=str, default='0.0.0.0')
+    args = parser.parse_args()
+
+    app.run(host=args.host, port=args.port, protocol=WebSocketProtocol)
