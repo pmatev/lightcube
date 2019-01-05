@@ -1,11 +1,43 @@
 import React, { Component } from 'react';
 import * as THREE from 'three';
-import { OrbitControls, OBJLoader } from 'three-full';
+import { OrbitControls } from 'three-full';
+import * as _ from 'lodash';
+import TWEEN from '@tweenjs/tween.js';
 
-import { AXES, BUTTONS } from './lib/ps4';
 
-const defaultMaterial = new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff });
-const outlineMaterial = new THREE.MeshToonMaterial({ color: Math.random() * 0xffffff });
+const calculateRGB = ({ xi, yi, zi, x, y, z, offset = 0 }) => {
+  const r = Math.max(Math.sin(Math.PI * (xi / x) + offset), 0);
+  const g = Math.max(Math.sin(Math.PI * (yi / y) + offset), 0);
+  const b = Math.max(Math.sin(Math.PI * (zi / z) + offset), 0);
+  const a = r * g * b;
+  return { r, g, b, a };
+};
+
+const generateGrid = ({ edgeSize, x, y, z }) => (group) => (
+  _.range(x).map(xi =>
+    _.range(y).map(yi =>
+      _.range(z).map(zi => {
+        const box = new THREE.BoxBufferGeometry(1, 1, 1);
+        const { r, g, b, a } = calculateRGB({ xi, yi, zi, x, y, z });
+
+        const material = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(r, g, b),
+          transparent: true,
+          opacity: a
+        });
+        const cube = new THREE.Mesh(box, material);
+
+        cube.position.set(
+          xi * (edgeSize / x),
+          yi * (edgeSize / y),
+          zi * (edgeSize / z),
+        );
+        group.add(cube);
+        return { cube, xi, yi, zi, x, y, z };
+      })
+    )
+  )
+)
 
 class App extends Component {
   constructor(props) {
@@ -30,42 +62,49 @@ class App extends Component {
 
     const scene = new THREE.Scene();
     this.scene = scene;
-    scene.background = new THREE.Color(0xf0f0f0);
+    scene.background = new THREE.Color(0xffffff);
 
-    const light = new THREE.HemisphereLight(0xffffbb, 0x000000, 1);
+    const light = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
     light.castShadow = true;
     light.position.set(1, 0.9, 0);
     scene.add(light);
 
-    const gridHelper = new THREE.GridHelper(100, 100);
-    scene.add(gridHelper);
+    // const gridHelper = new THREE.GridHelper(100, 100);
+    // scene.add(gridHelper);
 
-    const geometry = new THREE.BoxBufferGeometry(20, 20, 20);
-    // const object = new THREE.Mesh(geometry, defaultMaterial);
-    // scene.add(object);
-    // this.object = object;
+    this.group = new THREE.Group();
+    const grid = generateGrid({ edgeSize: 50, x: 20, y: 20, z: 20 })(this.group);
+    this.group.position.set(-25, -25, -25);
+
+    scene.add(this.group);
 
     this.orbitControl = new OrbitControls(camera);
+    this.orbitControl.autoRotate = true;
 
     document.addEventListener('mousemove', this.onMouseMove, false);
 
-    const loader = new OBJLoader();
+    // const obj = { x: 0 };
+    // const tween = new TWEEN.Tween(obj)
+    //   .to({ x: Math.PI }, 10000)
+    //   .easing(TWEEN.Easing.Quadratic.Out)
+    //   .onUpdate(() => {
+    //     grid.forEach(xx => {
+    //       xx.forEach(yy => {
+    //         yy.forEach(({ cube, xi, yi, zi, x, y, z }) => {
+    //           const { opacityX, opacityY, opacityZ } = calculateOpacity({ xi, yi, zi, x, y, z, offset: 0 });
+    //           cube.material.color.setRGB(opacityX, opacityY, opacityZ);
+    //         })
+    //       })
+    //     })
+    //   })
+    //   // .start();
+    //
+    // tween.onComplete(() => {
+    //   tween.start()
+    // });
 
-    // load a resource
-    loader.load(`${process.env.PUBLIC_URL}/models/boxcar.obj`,
-      obj => {
-        scene.add(obj);
-      },
-      xhr => {
-        console.log(`${xhr.loaded / xhr.total * 100}% loaded`);
-      },
-      error => {
-        console.log('An error happened', error);
-      },
-    );
-
-    this.registerGamepad();
-    this.animate();
+    // begin
+    requestAnimationFrame(this.animate);
   }
 
   registerGamepad() {
@@ -85,22 +124,24 @@ class App extends Component {
     // [this.intersects] = raycaster.intersectObjects([this.object]);
   }
 
-  animate = () => {
+  animate = (time) => {
     this.update();
     this.orbitControl.update();
 
     this.renderScene();
 
     requestAnimationFrame(this.animate);
+    // TWEEN.update(time)
     // stats.update();
   }
 
-  update() {
-    if (!this.gamepad) return;
-    const gamepad = navigator.getGamepads()[0];
-    const translateX = gamepad.axes[AXES.LEFT.X];
-    const translateY = -1 * gamepad.axes[AXES.LEFT.Y];
-    // this.object.position.add(new THREE.Vector3(translateX, translateY, 0));
+  update = () => {
+    // this.group.position.add(0, 0, 0);
+    // if (!this.gamepad) return;
+    // const gamepad = navigator.getGamepads()[0];
+    // const translateX = gamepad.axes[AXES.LEFT.X];
+    // const translateY = -1 * gamepad.axes[AXES.LEFT.Y];
+    // this.cube.position.set(10, 0, 0);
   }
 
   renderScene = () => {
